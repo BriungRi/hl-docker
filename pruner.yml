@@ -1,0 +1,13 @@
+name: "hyperliquid"
+
+services:
+  pruner:
+    profiles: ["pruner"]
+    restart: unless-stopped
+    build: ./pruner
+    volumes:
+      - hl-data:/home/hluser/hl/data
+
+volumes:
+  hl-data:
+    driver: local

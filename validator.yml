@@ -1,0 +1,21 @@
+name: "hyperliquid"
+
+services:
+  validator:
+    profiles: ["validator"]
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - CHAIN=${CHAIN}
+        - PEER_IPS=${PEER_IPS}
+        - TRY_NEW_PEERS=${TRY_NEW_PEERS}
+    ports:
+      - "4000-4010:4000-4010"
+    volumes:
+      - hl-data:/home/hluser/hl/data
+
+volumes:
+  hl-data:
+    driver: local

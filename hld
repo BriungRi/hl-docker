@@ -1,0 +1,98 @@
+#! /bin/bash
+# TODO
+# - unjail command
+# - top50 command
+# - lookup-validator command
+
+VERSION="1.0.0"
+COMPOSE_FILES="-f node.yml -f validator.yml -f pruner.yml"
+
+# Help message
+show_help() {
+    echo "Hyperliquid Docker CLI Tool v${VERSION}"
+    echo
+    echo "Usage: hld [OPTIONS] COMMAND"
+    echo
+    echo "Options:"
+    echo "  --help     Show this help message"
+    echo "  --version  Show version information"
+    echo
+    echo "Commands:"
+    echo "  up        Start containers (docker compose up)"
+    echo "  update    Update code and rebuild containers"
+    echo "  down      Stop and remove containers"
+    echo "  restart   Restart containers"
+    echo
+    echo "Environment Variables (.env):"
+    echo "  VALIDATOR=true/false  Configure node/validator replicas"
+    echo "  PRUNER=true/false    Enable/disable pruner service"
+}
+
+# Version info
+show_version() {
+    echo "hld version ${VERSION}"
+}
+
+# Load environment variables
+load_env() {
+    if [ -f .env ]; then
+        source .env
+    fi
+
+    # Validate VALIDATOR setting
+    if [ -z "$VALIDATOR" ]; then
+        echo "Error: VALIDATOR must be set to true or false in .env"
+        exit 1
+    fi
+}
+
+# Get the service profile based on configuration
+get_profiles() {
+    local profiles=""
+
+    # Set active profiles based on configuration
+    if [ "$VALIDATOR" = "true" ]; then
+        profiles="--profile validator"
+    else
+        profiles="--profile node"
+    fi
+
+    if [ "$PRUNER" = "true" ]; then
+        profiles="$profiles --profile pruner"
+    fi
+
+    echo "$profiles"
+}
+
+# Main command processing
+load_env
+
+case "$1" in
+    --help)
+        show_help
+        exit 0
+        ;;
+    --version)
+        show_version
+        exit 0
+        ;;
+    up)
+        docker compose $COMPOSE_FILES $(get_profiles) up -d
+        ;;
+    update)
+        git pull
+        docker compose $COMPOSE_FILES $(get_profiles) build --no-cache
+        docker compose $COMPOSE_FILES $(get_profiles) up -d
+        ;;
+    down)
+        docker compose $COMPOSE_FILES $(get_profiles) down
+        ;;
+    restart)
+        docker compose $COMPOSE_FILES $(get_profiles) restart
+        ;;
+    *)
+        echo "Error: Unknown command '$1'"
+        echo "Run 'hld --help' for usage information"
+        exit 1
+        ;;
+esac
