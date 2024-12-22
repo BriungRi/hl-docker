@@ -23,6 +23,7 @@ show_help() {
     echo "  down      Stop and remove containers"
     echo "  restart   Restart containers"
     echo "  vstatus   Check validator status"
+    echo "  vtop      List top N validators by stake (default: 50)"
     echo
     echo "Environment Variables (.env):"
     echo "  VALIDATOR=true/false  Configure node/validator replicas"
@@ -80,6 +81,28 @@ vstatus() {
         jq --arg validator "$1" '.[] | select(.name == $validator)'
 }
 
+# Get top N validators
+vtop() {
+    local count=${1:-50}
+    if ! [[ "$count" =~ ^[0-9]+$ ]]; then
+        echo "Error: Please provide a valid number"
+        echo "Usage: hld vtop [number]"
+        exit 1
+    fi
+
+    curl -X POST \
+        --header "Content-Type: application/json" \
+        --data '{ "type": "validatorSummaries"}' \
+        https://api.hyperliquid-testnet.xyz/info | \
+        jq -r --arg n "$count" 'sort_by(.stake) | reverse | .[:($n|tonumber)] | to_entries | map({
+            index: (.key + 1),
+            name: .value.name,
+            stake: (.value.stake / 100000000),
+            isJailed: .value.isJailed,
+            isActive: .value.isActive
+        })'
+}
+
 # Main command processing
 load_env
 
@@ -108,6 +131,9 @@ case "$1" in
         ;;
     vstatus)
         vstatus "$2"
+        ;;
+    vtop)
+        vtop "$2"
         ;;
     *)
         echo "Error: Unknown command '$1'"
