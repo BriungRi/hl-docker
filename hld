@@ -147,6 +147,46 @@ handle_exec() {
     esac
 }
 
+# Validate environment settings
+validate_env() {
+    # Check required variables
+    if [ -z "$CHAIN" ]; then
+        echo "Error: CHAIN must be set in .env"
+        exit 1
+    fi
+
+    if [ -z "$VALIDATOR" ]; then
+        echo "Error: VALIDATOR must be set to true or false in .env"
+        exit 1
+    fi
+
+    if [ -z "$PRUNER" ]; then
+        echo "Error: PRUNER must be set to true or false in .env"
+        exit 1
+    fi
+
+    # Check validator-specific requirements
+    if [ "$VALIDATOR" = "true" ]; then
+        if [ -z "$SIGNER_KEY" ]; then
+            echo "Error: SIGNER_KEY is required when VALIDATOR=true"
+            exit 1
+        fi
+    fi
+
+    # Check that either all OVERRIDE_* are set or none are set
+    if [ ! -z "$OVERRIDE_PEER_IPS" ] || [ ! -z "$OVERRIDE_TRY_NEW_PEERS" ]; then
+        if [ -z "$OVERRIDE_PEER_IPS" ] || [ -z "$OVERRIDE_TRY_NEW_PEERS" ]; then
+            echo "Error: When using overrides, both OVERRIDE_PEER_IPS and OVERRIDE_TRY_NEW_PEERS must be set"
+            exit 1
+        fi
+    fi
+}
+
+handle_up() {
+    validate_env
+    docker compose $COMPOSE_FILES $(get_profiles) up -d --build
+}
+
 # Main command processing
 load_env
 
@@ -160,7 +200,7 @@ case "$1" in
         exit 0
         ;;
     up)
-        docker compose $COMPOSE_FILES $(get_profiles) up -d --build
+        handle_up
         ;;
     update)
         git pull
