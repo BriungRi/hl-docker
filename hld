@@ -22,6 +22,7 @@ show_help() {
     echo "  update    Update code and rebuild containers"
     echo "  down      Stop and remove containers"
     echo "  restart   Restart containers"
+    echo "  vstatus   Check validator status"
     echo
     echo "Environment Variables (.env):"
     echo "  VALIDATOR=true/false  Configure node/validator replicas"
@@ -64,6 +65,21 @@ get_profiles() {
     echo "$profiles"
 }
 
+# Get validator status
+vstatus() {
+    if [ -z "$1" ]; then
+        echo "Error: Validator name is required"
+        echo "Usage: hld vstatus <validator-name>"
+        exit 1
+    fi
+
+    curl -X POST \
+        --header "Content-Type: application/json" \
+        --data '{ "type": "validatorSummaries"}' \
+        https://api.hyperliquid-testnet.xyz/info | \
+        jq --arg validator "$1" '.[] | select(.name == $validator)'
+}
+
 # Main command processing
 load_env
 
@@ -89,6 +105,9 @@ case "$1" in
         ;;
     restart)
         docker compose $COMPOSE_FILES $(get_profiles) restart
+        ;;
+    vstatus)
+        vstatus "$2"
         ;;
     *)
         echo "Error: Unknown command '$1'"
