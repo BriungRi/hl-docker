@@ -15,6 +15,7 @@ services:
       - "4000-4010:4000-4010"
     volumes:
       - hl-data:/home/hluser/hl/data
+
   validator:
     restart: unless-stopped
     build:
@@ -30,12 +31,67 @@ services:
       - "4000-4010:4000-4010"
     volumes:
       - hl-data:/home/hluser/hl/data
+
   pruner:
     restart: unless-stopped
     build: ./pruner
     volumes:
       - hl-data:/home/hluser/hl/data
 
+  hl_exporter:
+    restart: unless-stopped
+    build:
+      dockerfile: hl_exporter/Dockerfile
+      args:
+        USER_ID: 1000
+        GROUP_ID: 1000
+    container_name: hl_exporter
+    environment:
+      - HOSTNAME=hl_exporter
+      - NODE_HOME=/home/hluser/hl
+      - BINARY_HOME=/home/hluser
+    volumes:
+      - hl-data:/home/hluser/hl/data:ro
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - prometheus_data:/prometheus
+      - ${PWD}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.listen-address=:9099"
+    depends_on:
+      - hl_exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana # Named volume for Grafana data persistence
+      - ${PWD}/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ${PWD}/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ${PWD}/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    restart: unless-stopped
+
 volumes:
   hl-data:
     driver: local
+  prometheus_data:
+  grafana_data:
