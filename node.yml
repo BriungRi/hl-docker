@@ -9,8 +9,8 @@ services:
       dockerfile: Dockerfile
       args:
         - CHAIN=${CHAIN}
-        - PEER_IPS=${PEER_IPS}
-        - TRY_NEW_PEERS=${TRY_NEW_PEERS}
+        - OVERRIDE_PEER_IPS=${OVERRIDE_PEER_IPS}
+        - OVERRIDE_TRY_NEW_PEERS=${OVERRIDE_TRY_NEW_PEERS}
     ports:
       - "4000-4010:4000-4010"
     volumes:

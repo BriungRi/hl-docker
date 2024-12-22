@@ -22,8 +22,10 @@ show_help() {
     echo "  update    Update code and rebuild containers"
     echo "  down      Stop and remove containers"
     echo "  restart   Restart containers"
+    echo "  logs      Follow container logs (docker compose logs -f)"
     echo "  vstatus   Check validator status"
     echo "  vtop      List top N validators by stake (default: 50)"
+    echo "  exec      Execute a command in a container"
     echo
     echo "Environment Variables (.env):"
     echo "  VALIDATOR=true/false  Configure node/validator replicas"
@@ -119,6 +121,32 @@ vtop() {
         })'
 }
 
+# Handle exec command
+handle_exec() {
+    if [ -z "$1" ]; then
+        echo "Error: Service name required"
+        echo "Usage: hld exec <service>"
+        echo "Services: validator, node, pruner"
+        exit 1
+    fi
+
+    case "$1" in
+        validator|node|pruner)
+            container_name="hyperliquid-${1}-1"
+            if ! docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+                echo "Error: Container ${container_name} is not running"
+                exit 1
+            fi
+            docker exec -it "${container_name}" bash
+            ;;
+        *)
+            echo "Error: Invalid service name '$1'"
+            echo "Valid services: validator, node, pruner"
+            exit 1
+            ;;
+    esac
+}
+
 # Main command processing
 load_env
 
@@ -132,7 +160,7 @@ case "$1" in
         exit 0
         ;;
     up)
-        docker compose $COMPOSE_FILES $(get_profiles) up -d
+        docker compose $COMPOSE_FILES $(get_profiles) up -d --build
         ;;
     update)
         git pull
@@ -145,11 +173,17 @@ case "$1" in
     restart)
         docker compose $COMPOSE_FILES $(get_profiles) restart
         ;;
+    logs)
+        docker compose $COMPOSE_FILES $(get_profiles) logs -f
+        ;;
     vstatus)
         vstatus "$2"
         ;;
     vtop)
         vtop "$2"
+        ;;
+    exec)
+        handle_exec "$2"
         ;;
     *)
         echo "Error: Unknown command '$1'"

@@ -4,8 +4,8 @@ ARG USERNAME=hluser
 ARG USER_UID=10000
 ARG USER_GID=$USER_UID
 ARG CHAIN=Testnet
-ARG PEER_IPS=""
-ARG TRY_NEW_PEERS=false
+ARG OVERRIDE_PEER_IPS=""
+ARG OVERRIDE_TRY_NEW_PEERS=false
 
 # create custom user, install dependencies, create data directory
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -18,10 +18,10 @@ USER $USERNAME
 WORKDIR /home/$USERNAME
 
 # configure chain to testnet
-RUN echo '{"chain": "${CHAIN}"}' > /home/$USERNAME/visor.json
+RUN echo '{"chain": "'${CHAIN}'"}' > /home/$USERNAME/visor.json
 
 # Configure gossip config
-RUN echo "{ \"root_node_ips\": [$(echo $PEER_IPS | awk -F',' '{for(i=1;i<=NF;i++) printf "%s{\"Ip\": \"%s\"}", (i==1?"":","), $i)}], \"try_new_peers\": ${TRY_NEW_PEERS}, \"chain\": \"${CHAIN}\" }" > /home/$USERNAME/override_gossip_config.json
+RUN echo '{ "root_node_ips": ['"$(echo $OVERRIDE_PEER_IPS | awk -F',' '{for(i=1;i<=NF;i++) printf "%s{\"Ip\": \"%s\"}", (i==1?"":","), $i}')"'], "try_new_peers": '${OVERRIDE_TRY_NEW_PEERS}', "chain": "'${CHAIN}'" }' > /home/$USERNAME/override_gossip_config.json
 
 # save the public list of peers to connect to
 ADD --chown=$USER_UID:$USER_GID https://binaries.hyperliquid.xyz/${CHAIN}/initial_peers.json /home/$USERNAME/initial_peers.json
