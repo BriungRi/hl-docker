@@ -4,9 +4,13 @@ ARG USERNAME=hluser
 ARG USER_UID=10000
 ARG USER_GID=$USER_UID
 ARG CHAIN=
+ARG VALIDATOR=
 ARG OVERRIDE_PEER_IPS=unset
 ARG OVERRIDE_TRY_NEW_PEERS=unset
 ARG SIGNER_KEY=unset
+
+# Need to capture the value for the entrypoint
+ENV VALIDATOR=$VALIDATOR
 
 # create custom user, install dependencies, create data directory
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -44,5 +48,9 @@ ADD --chown=$USER_UID:$USER_GID --chmod=700 https://binaries.hyperliquid.xyz/${C
 # gossip ports
 EXPOSE 4000-4010
 
-# run a non-validating node
-ENTRYPOINT $HOME/hl-visor run-validator
+# run entrypoint
+ENTRYPOINT if [ "$VALIDATOR" = "true" ]; then \
+    $HOME/hl-visor run-validator; \
+else \
+    $HOME/hl-visor run-non-validator; \
+fi
