@@ -66,8 +66,22 @@ get_profiles() {
     echo "$profiles"
 }
 
+# Function to check if jq is installed
+check_jq() {
+    if ! command -v jq &> /dev/null; then
+        echo "Error: jq is not installed"
+        echo "Please install jq to use this command:"
+        echo "  Ubuntu/Debian: sudo apt-get install jq"
+        echo "  MacOS: brew install jq"
+        echo "  CentOS/RHEL: sudo yum install jq"
+        exit 1
+    fi
+}
+
 # Get validator status
 vstatus() {
+    check_jq
+
     if [ -z "$1" ]; then
         echo "Error: Validator name is required"
         echo "Usage: hld vstatus <validator-name>"
@@ -83,6 +97,8 @@ vstatus() {
 
 # Get top N validators
 vtop() {
+    check_jq
+
     local count=${1:-50}
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
         echo "Error: Please provide a valid number"
