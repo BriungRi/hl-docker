@@ -182,6 +182,25 @@ handle_up() {
     docker compose $COMPOSE_FILES build && docker compose $COMPOSE_FILES up -d $scale_args
 }
 
+# Handle logs command
+handle_logs() {
+    if [ -z "$1" ]; then
+        # If no service specified, show all logs
+        docker compose $COMPOSE_FILES logs -f
+        return
+    fi
+
+    # Check if service exists in docker-compose
+    if ! docker compose $COMPOSE_FILES ps "$1" >/dev/null 2>&1; then
+        echo "Error: Service '$1' not found"
+        echo "Available services:"
+        docker compose $COMPOSE_FILES ps --services
+        exit 1
+    fi
+
+    docker compose $COMPOSE_FILES logs -f "$1"
+}
+
 # Main command processing
 load_env
 
@@ -208,7 +227,7 @@ case "$1" in
         docker compose $COMPOSE_FILES restart
         ;;
     logs)
-        docker compose $COMPOSE_FILES logs -f
+        handle_logs "$2"
         ;;
     vstatus)
         vstatus "$2"
