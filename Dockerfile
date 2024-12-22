@@ -4,8 +4,9 @@ ARG USERNAME=hluser
 ARG USER_UID=10000
 ARG USER_GID=$USER_UID
 ARG CHAIN=
-ARG OVERRIDE_PEER_IPS
-ARG OVERRIDE_TRY_NEW_PEERS
+ARG OVERRIDE_PEER_IPS=unset
+ARG OVERRIDE_TRY_NEW_PEERS=unset
+ARG SIGNER_KEY=unset
 
 # create custom user, install dependencies, create data directory
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -21,8 +22,14 @@ WORKDIR /home/$USERNAME
 RUN echo '{"chain": "'${CHAIN}'"}' > /home/$USERNAME/visor.json
 
 # Configure gossip config only if overrides are set
-RUN if [ ! -z "$OVERRIDE_PEER_IPS" ] && [ ! -z "$OVERRIDE_TRY_NEW_PEERS" ]; then \
+RUN if [ "$OVERRIDE_PEER_IPS" != "unset" ] && [ "$OVERRIDE_TRY_NEW_PEERS" != "unset" ]; then \
     echo '{ "root_node_ips": ['"$(echo $OVERRIDE_PEER_IPS | awk -F',' '{for(i=1;i<=NF;i++) printf "%s{\"Ip\": \"%s\"}", (i==1?"":","), $i}')"'], "try_new_peers": '${OVERRIDE_TRY_NEW_PEERS}', "chain": "'${CHAIN}'" }' > /home/$USERNAME/override_gossip_config.json; \
+fi
+
+# Configure signer key if provided
+RUN if [ "$SIGNER_KEY" != "unset" ]; then \
+    mkdir -p /home/$USERNAME/hl/hyperliquid_data && \
+    echo '{"key": "'${SIGNER_KEY}'"}' > /home/$USERNAME/hl/hyperliquid_data/node_config.json; \
 fi
 
 # save the public list of peers to connect to

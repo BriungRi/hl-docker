@@ -5,7 +5,7 @@
 # - lookup-validator command
 
 VERSION="1.0.0"
-COMPOSE_FILES="-f node.yml -f validator.yml -f pruner.yml"
+COMPOSE_FILES="-f docker-compose.yml"
 
 # Help message
 show_help() {
@@ -48,24 +48,6 @@ load_env() {
         echo "Error: VALIDATOR must be set to true or false in .env"
         exit 1
     fi
-}
-
-# Get the service profile based on configuration
-get_profiles() {
-    local profiles=""
-
-    # Set active profiles based on configuration
-    if [ "$VALIDATOR" = "true" ]; then
-        profiles="--profile validator"
-    else
-        profiles="--profile node"
-    fi
-
-    if [ "$PRUNER" = "true" ]; then
-        profiles="$profiles --profile pruner"
-    fi
-
-    echo "$profiles"
 }
 
 # Function to check if jq is installed
@@ -182,9 +164,22 @@ validate_env() {
     fi
 }
 
+# Handle up command
 handle_up() {
     validate_env
-    docker compose $COMPOSE_FILES $(get_profiles) up -d --build
+
+    # Build scale arguments based on configuration
+    local scale_args=""
+    if [ "$VALIDATOR" = "true" ]; then
+        scale_args="--scale validator=1 --scale node=0"
+    else
+        scale_args="--scale validator=0 --scale node=1"
+    fi
+
+    scale_args="$scale_args --scale pruner=$([ "$PRUNER" = "true" ] && echo "1" || echo "0")"
+
+    # Start the containers
+    docker compose $COMPOSE_FILES build && docker compose $COMPOSE_FILES up -d $scale_args
 }
 
 # Main command processing
@@ -204,17 +199,16 @@ case "$1" in
         ;;
     update)
         git pull
-        docker compose $COMPOSE_FILES $(get_profiles) build --no-cache
-        docker compose $COMPOSE_FILES $(get_profiles) up -d
+        handle_up
         ;;
     down)
-        docker compose $COMPOSE_FILES $(get_profiles) down
+        docker compose $COMPOSE_FILES down
         ;;
     restart)
-        docker compose $COMPOSE_FILES $(get_profiles) restart
+        docker compose $COMPOSE_FILES restart
         ;;
     logs)
-        docker compose $COMPOSE_FILES $(get_profiles) logs -f
+        docker compose $COMPOSE_FILES logs -f
         ;;
     vstatus)
         vstatus "$2"

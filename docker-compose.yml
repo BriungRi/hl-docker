@@ -1,0 +1,39 @@
+name: "hyperliquid"
+
+services:
+  node:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - CHAIN=${CHAIN}
+        - OVERRIDE_PEER_IPS=${OVERRIDE_PEER_IPS:-unset}
+        - OVERRIDE_TRY_NEW_PEERS=${OVERRIDE_TRY_NEW_PEERS:-unset}
+    ports:
+      - "4000-4010:4000-4010"
+    volumes:
+      - hl-data:/home/hluser/hl/data
+  validator:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - CHAIN=${CHAIN}
+        - OVERRIDE_PEER_IPS=${OVERRIDE_PEER_IPS:-unset}
+        - OVERRIDE_TRY_NEW_PEERS=${OVERRIDE_TRY_NEW_PEERS:-unset}
+        - SIGNER_KEY=${SIGNER_KEY:-unset}
+    ports:
+      - "4000-4010:4000-4010"
+    volumes:
+      - hl-data:/home/hluser/hl/data
+  pruner:
+    restart: unless-stopped
+    build: ./pruner
+    volumes:
+      - hl-data:/home/hluser/hl/data
+
+volumes:
+  hl-data:
+    driver: local
