@@ -56,7 +56,7 @@ services:
       - BINARY_HOME=/home/hluser
     volumes:
       - hl-home:/home/hluser
-      - hl-data:/home/hluser/hl/data:ro
+      - hl-data:/home/hluser/hl/data
     depends_on:
       - node
       - validator
