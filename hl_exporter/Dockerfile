@@ -1,7 +1,6 @@
 FROM debian:sid-slim
 
 # Set build-time variables for UID and GID
-ARG CHAIN=
 ARG USER_ID=10000
 ARG GROUP_ID=10000
 

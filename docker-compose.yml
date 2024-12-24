@@ -47,7 +47,6 @@ services:
       args:
         - USER_ID=10000
         - GROUP_ID=10000
-        - CHAIN=${CHAIN}
     container_name: hl_exporter
     user: "10000:10000"
     environment:
@@ -55,6 +54,7 @@ services:
       - HOME=/home/hluser
       - NODE_HOME=/home/hluser/hl
       - BINARY_HOME=/home/hluser
+      - CHAIN=${CHAIN}
     volumes:
       - hl-home:/home/hluser
       - hl-data:/home/hluser/hl/data
