@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g ubuntu -m ubuntu
 
-# **Install the hl_exporter binary as root user**
+# Install the hl_exporter binary as root user
 RUN curl -sSL $(curl -s https://api.github.com/repos/validaoxyz/hyperliquid-exporter/releases/latest \
     | jq -r '.assets[] | select(.name | contains("linux_amd64") and (endswith(".tar.gz") | not)) | .browser_download_url') \
     -o /usr/local/bin/hl_exporter && \
@@ -25,8 +25,5 @@ USER ubuntu
 # Set working directory
 WORKDIR /app
 
-# Rely on bind mount in docker-compose.yml instead
-# COPY --chown=ubuntu:ubuntu .env /app/.env
-
-# Command to run the binary
-CMD ["/usr/local/bin/hl_exporter", "start", "--chain", "${CHAIN,,}"]
+# Use ENTRYPOINT with shell form to allow environment variable expansion
+ENTRYPOINT /usr/local/bin/hl_exporter start --chain ${CHAIN,,}
