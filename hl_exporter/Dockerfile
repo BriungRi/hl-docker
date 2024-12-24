@@ -25,5 +25,5 @@ USER ubuntu
 # Set working directory
 WORKDIR /app
 
-# Use ENTRYPOINT with shell form to allow environment variable expansion
-ENTRYPOINT /usr/local/bin/hl_exporter start --chain ${CHAIN,,}
+# Use tr for lowercase conversion
+ENTRYPOINT /usr/local/bin/hl_exporter start --chain $(echo $CHAIN | tr '[:upper:]' '[:lower:]')
