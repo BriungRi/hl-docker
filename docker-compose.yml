@@ -56,6 +56,9 @@ services:
     volumes:
       - hl-home:/home/hluser
       - hl-data:/home/hluser/hl/data:ro
+    depends_on:
+      - node
+      - validator
 
   prometheus:
     image: prom/prometheus:latest
