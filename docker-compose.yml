@@ -48,6 +48,7 @@ services:
         USER_ID: 10000
         GROUP_ID: 10000
     container_name: hl_exporter
+    user: "10000:10000"
     environment:
       - HOSTNAME=hl_exporter
       - NODE_HOME=/home/hluser/hl
