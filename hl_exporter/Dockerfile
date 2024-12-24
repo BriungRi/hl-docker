@@ -1,8 +1,9 @@
 FROM debian:sid-slim
 
 # Set build-time variables for UID and GID
-ARG USER_ID=1000
-ARG GROUP_ID=1000
+ARG CHAIN=
+ARG USER_ID=10000
+ARG GROUP_ID=10000
 
 # Install necessary dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -29,4 +30,4 @@ WORKDIR /app
 # COPY --chown=ubuntu:ubuntu .env /app/.env
 
 # Command to run the binary
-CMD ["/usr/local/bin/hl_exporter", "start"]
+CMD ["/usr/local/bin/hl_exporter", "start", "--chain", "${CHAIN,,}"]
