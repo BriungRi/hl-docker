@@ -45,8 +45,8 @@ services:
     build:
       dockerfile: hl_exporter/Dockerfile
       args:
-        USER_ID: 1000
-        GROUP_ID: 1000
+        USER_ID: 10000
+        GROUP_ID: 10000
     container_name: hl_exporter
     environment:
       - HOSTNAME=hl_exporter
