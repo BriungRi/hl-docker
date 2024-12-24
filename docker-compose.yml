@@ -51,6 +51,7 @@ services:
     user: "10000:10000"
     environment:
       - HOSTNAME=hl_exporter
+      - HOME=/home/hluser
       - NODE_HOME=/home/hluser/hl
       - BINARY_HOME=/home/hluser
     volumes:
